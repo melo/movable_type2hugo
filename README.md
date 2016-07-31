@@ -27,8 +27,16 @@ If you don't have `cpanm`, you can get it by following these quick instructions:
 
 ## Usage ##
 
-On the root of your Hugo site, run:
+### Using Carton ###
 
-    movable_type2hugo.pl
+To migrate a MT blog, first migrate posts via DB:
 
-WIP...
+    carton exec -- ./movable_type2hugo.pl <path_to_sqlite_db> <path_to_hugo>
+
+Add a `-v` to see what is going on.
+
+Then migrate the pages again via scraping. This could catch pages that the DB missed, usually in case of incomplete backups. It is OK to run both, as long as you run the script to migrate from DB first.
+
+    carton exec -- ./scrape_blog.pl <path_to_archive_pages> <path_to_hugo> --prefix <aliases_prefix>
+
+Again, you can use a `-v` to see whats going on.
