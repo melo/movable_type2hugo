@@ -141,7 +141,7 @@ sub is_scraped_page {
   return 1 unless $path->exists;
 
   my $content = $path->slurp;
-  return 1 if $content =~ m/^via = "scrape"/;
+  return 1 if $content =~ m/^via = "scrape"/gsm;
 
   return 0;
 }
