@@ -66,12 +66,19 @@ sub collect_posts_from_mt_db {
 
 sub generate_hugo_post {
   my ($post) = @_;
-
   my $date = eval { Time::Moment->from_string("$post->{entry_created_on}Z", lenient => 1) };
   fatal("could not parse post date '$post->{entry_created_on}'") unless $date;
 
   my $path =
     path($opts{hugo_dir}, 'content', 'notes', $date->year, $date->strftime('%m'), "$post->{entry_basename}.md");
+
+  if (!is_db_page($path)) {
+    debug("skipping '$path', not a db-generated page");
+    return;
+  }
+
+  debug("Writting '$post->{entry_title}' on $date (to $path)");
+
   $path->parent->mkpath;
   my $fh = $path->openw;
 
@@ -87,6 +94,7 @@ sub generate_hugo_post {
   print $fh 'alias = ',
     quote(join('/', qw( notes archive ), $date->year, $date->strftime('%m'), "$post->{entry_basename}.html")), "\n";
   print $fh "draft = true\n" if $post->{entry_status} != 2;
+  print $fh "via = \"db\"\n";
   print $fh "+++\n\n";
 
   print $fh $post->{entry_text},      "\n\n" if $post->{entry_text};
@@ -100,6 +108,18 @@ sub quote {
   $t =~ s/"/\\"/g;
   return qq{"$t"};
 }
+
+sub is_db_page {
+  my ($path) = @_;
+
+  return 1 unless $path->exists;
+
+  my $content = $path->slurp;
+  return 1 if $content =~ m/^via = "db"/gsm;
+
+  return 0;
+}
+
 
 #################
 # Options parsing
